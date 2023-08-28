@@ -1,3 +1,4 @@
+# LibreSDR
 This is an unofficial port of PlutoSDR onto LibreSDR a.k.a. ZynqSDR.              
 There is not a whole lot of information from the manufacturer, but the device can be purchased on Aliexpress, eBay and other platforms.
 The board schematics from one of the Aliexpress sellers is included, see zynqsdr_rev5.pdf
@@ -12,7 +13,7 @@ This includes Vivado and Vitis 2021.2, please use only supported build host envi
 How to build?
 
 Extract this set of patches to a new directory, clone plutosdr software, please note the directory name in the apply.sh script, adjust as needed.  
-
+```sh
 mkdir libresdr-fw-patch_v0.37_src
 cd  libresdr-fw-patch_v0.37_scr
 git clone --branch v0.37 https://github.com/analogdevicesinc/plutosdr-fw.git  libresdr-fw-patch_v0.37
@@ -24,7 +25,7 @@ export VIVADO_SETTINGS=/opt/Xilinx/Vivado/2021.2/settings64.sh
 export TARGET=libre
 make
 make sdimg
-
+```
 Make a cup of coffee, then probably one more.
 Collect results in build directory and in addition a set of files for the sd card in build_sdimg
 
