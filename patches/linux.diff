@@ -1,0 +1,818 @@
+diff --git a/arch/arm/boot/dts/zynq-libre.dts b/arch/arm/boot/dts/zynq-libre.dts
+new file mode 100644
+index 000000000000..3c8d127b7329
+--- /dev/null
++++ b/arch/arm/boot/dts/zynq-libre.dts
+@@ -0,0 +1,61 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *
++ * hdl_project: <libre>
++ * board_revision: <5>
++ *
++ */
++/dts-v1/;
++#include "zynq-libre.dtsi"
++
++
++// &axi_i2c0 {
++// 	current_limiter@5a {
++// 		compatible = "adi,adm1177";
++// 		reg = <0x5a>;
++// 		adi,r-sense-mohm = <50>; /* 50 mOhm */
++// 		adi,shutdown-threshold-ma = <1059>; /* 1.059 A */
++// 		adi,vrange-high-enable;
++// 	};
++// };
++
++
++&adc0_ad9364 {
++	/* This property is controlled by u-boot environment. */
++	adi,2rx-2tx-mode-enable;
++};
++
++&cf_ad9364_dac_core_0 {
++	/* This property is controlled by u-boot environment. */
++	compatible = "adi,axi-ad9361-dds-6.00.a";
++};
++
++
++/ {
++	
++	leds {
++		compatible = "gpio-leds";
++		led0 {
++			label = "led0:green";
++			gpios = <&gpio0 15 0>;
++			linux,default-trigger = "heartbeat";
++		};
++	};
++
++	gpio_keys {
++		compatible = "gpio-keys";
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		button {
++			interrupt-parent = <&gpio0>;
++			interrupts = <14 IRQ_TYPE_EDGE_FALLING>;
++			label = "Button";
++			linux,code = <BTN_MISC>;
++		};
++
++	};
++};
++
++
++	
+diff --git a/arch/arm/boot/dts/zynq-libre.dtsi b/arch/arm/boot/dts/zynq-libre.dtsi
+new file mode 100644
+index 000000000000..00bdabd14a46
+--- /dev/null
++++ b/arch/arm/boot/dts/zynq-libre.dtsi
+@@ -0,0 +1,453 @@
++/*
++ * Libre SDR (Z7020/AD936x)
++ *
++ *
++ * Licensed under the GPL-2.
++ */
++#include "zynq.dtsi"
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++
++#define AD9361_EXT_BAND_CTL_SHORTHANDS
++#include <dt-bindings/iio/adc/adi,ad9361.h>
++
++/ {
++	model = "LibreSDR Rev.5 (Z7020/AD9363)";
++	memory {
++		device_type = "memory";
++		reg = <0x00000000 0x40000000>;
++	};
++
++	chosen {
++		stdout-path = "/amba@0/uart@E0000000";
++	};
++
++
++	clocks {
++		ad9364_clkin: clock@0 {
++			#clock-cells = <0>;
++			compatible = "adjustable-clock";
++			clock-frequency = <40000000>;
++			clock-accuracy = <200000>; /* 200 ppm (ppb) */
++			clock-output-names = "ad9364_ext_refclk";
++		};
++	};
++
++	usb_phy0: phy0 {
++		compatible = "ulpi-phy";
++		#phy-cells = <0>;
++		reg = <0xe0002000 0x1000>;
++		view-port = <0x0170>;
++		drv-vbus;
++	};
++
++};
++
++&clkc {
++	ps-clk-frequency = <50000000>;
++};
++
++&sdhci0 {
++	status = "okay";
++	xlnx,has-cd = <0x0>;
++	xlnx,has-power = <0x0>;
++	xlnx,has-wp = <0x0>;
++};
++
++&watchdog0 {
++	status = "okay";
++	reset-on-timeout;
++};
++
++&gem0 {
++	status = "okay";
++	phy-mode = "rgmii-id";
++	phy-handle = <&phy0>;
++
++	phy0: phy@0 { /* Marvell 88e1512 */
++		reg = <0>;
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reset-gpios = <&gpio0 46 1>;
++	};
++};
++
++&usb0 {
++	xlnx,phy-reset-gpio = <&gpio0 47 0>;
++	dr_mode = "otg";
++	status = "okay";
++	usb-phy = <&usb_phy0>;
++};
++
++&uart0 {
++        u-boot,dm-pre-reloc;
++        status = "okay";
++};
++
++&qspi {
++	status = "okay";
++	is-dual = <0>;
++	num-cs = <1>;
++	primary_flash: ps7-qspi@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <4>;
++		compatible = "n25q256a", "n25q512a", "jedec,spi-nor"; /* same as S25FL256 */
++		reg = <0x0>;
++		spi-max-frequency = <50000000>;
++		partition@qspi-fsbl-uboot {
++			label = "qspi-fsbl-uboot";
++			reg = <0x0 0x100000>; /* 1M */
++		};
++		partition@qspi-uboot-env {
++			label = "qspi-uboot-env";
++			reg = <0x100000 0x20000>; /* 128k */
++		};
++		partition@qspi-nvmfs {
++			label = "qspi-nvmfs";
++			reg = <0x120000 0xE0000>; /* 1M */
++		};
++		partition@qspi-linux {
++			label = "qspi-linux";
++			reg = <0x200000 0x1E00000>; /* 30M */
++		};
++	};
++};
++
++&adc {
++	xlnx,channels {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		channel@0 {
++			reg = <0>;
++		};
++	};
++};
++
++/ {
++	fpga_axi: fpga-axi@0 {
++		compatible = "simple-bus";
++		#address-cells = <0x1>;
++		#size-cells = <0x1>;
++		ranges;
++
++		// axi_i2c0: i2c@41600000 {
++		// 	compatible = "xlnx,axi-iic-1.02.a", "xlnx,xps-iic-2.00.a";
++		// 	reg = <0x41600000 0x10000>;
++		// 	interrupt-parent = <&intc>;
++		// 	interrupts = <0 59 IRQ_TYPE_LEVEL_HIGH>;
++		// 	clocks = <&clkc 15>;
++		// 	clock-names = "pclk";
++
++		// 	#address-cells = <1>;
++		// 	#size-cells = <0>;
++
++		// };
++
++		rx_dma: dma@7c400000 {
++			compatible = "adi,axi-dmac-1.00.a";
++			reg = <0x7c400000 0x10000>;
++			#dma-cells = <1>;
++			interrupts = <0 57 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clkc 16>;
++
++			adi,channels {
++				#size-cells = <0>;
++				#address-cells = <1>;
++
++				dma-channel@0 {
++					reg = <0>;
++					adi,source-bus-width = <32>;
++					adi,source-bus-type = <2>;
++					adi,destination-bus-width = <64>;
++					adi,destination-bus-type = <0>;
++				};
++			};
++		};
++
++		tx_dma: dma@7c420000 {
++			compatible = "adi,axi-dmac-1.00.a";
++			reg = <0x7c420000 0x10000>;
++			#dma-cells = <1>;
++			interrupts = <0 56 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clkc 16>;
++
++			adi,channels {
++				#size-cells = <0>;
++				#address-cells = <1>;
++
++				dma-channel@0 {
++					reg = <0>;
++					adi,source-bus-width = <64>;
++					adi,source-bus-type = <0>;
++					adi,destination-bus-width = <32>;
++					adi,destination-bus-type = <2>;
++				};
++			};
++		};
++
++		cf_ad9364_adc_core_0: cf-ad9361-lpc@79020000 {
++			compatible = "adi,axi-ad9361-6.00.a";
++			reg = <0x79020000 0x6000>;
++			dmas = <&rx_dma 0>;
++			dma-names = "rx";
++			spibus-connected = <&adc0_ad9364>;
++			adi,axi-decimation-core-available;
++		};
++
++		cf_ad9364_dac_core_0: cf-ad9361-dds-core-lpc@79024000 {
++			compatible = "adi,axi-ad9364-dds-6.00.a";
++			reg = <0x79024000 0x1000>;
++			clocks = <&adc0_ad9364 13>;
++			clock-names = "sampl_clk";
++			dmas = <&tx_dma 0>;
++			dma-names = "tx";
++			adi,axi-interpolation-core-available;
++			adi,axi-dds-default-scale = <0>;
++		};
++
++		mwipcore@43c00000 {
++			compatible = "mathworks,mwipcore-axi4lite-v1.00";
++			reg = <0x43c00000 0xffff>;
++		};
++	};
++};
++
++&spi0 {
++	status = "okay";
++
++	adc0_ad9364: ad9361-phy@0 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		#clock-cells = <1>;
++		compatible = "adi,ad9361";
++
++		/* SPI Setup */
++		reg = <0>;
++		spi-cpha;
++		spi-max-frequency = <10000000>;
++
++		/* Clocks */
++		clocks = <&ad9364_clkin 0>;
++		clock-names = "ad9364_ext_refclk";
++		clock-output-names = "rx_sampl_clk", "tx_sampl_clk";
++
++		/* Digital Interface Control */
++
++		 /* adi,digital-interface-tune-skip-mode:
++		  * 0 = TUNE RX&TX
++		  * 1 = SKIP TX
++		  * 2 = SKIP ALL
++		  */
++		//adi,digital-interface-tune-skip-mode = <0>;
++
++		adi,pp-tx-swap-enable;
++		adi,pp-rx-swap-enable;
++		adi,rx-frame-pulse-mode-enable;
++
++		adi,xo-disable-use-ext-refclk-enable;
++
++		/* Enable CMOS Mode */
++		adi,full-port-enable;
++		adi,digital-interface-tune-fir-disable;
++
++		adi,digital-interface-tune-skip-mode = <0>; /* TUNE RX & TX */
++		adi,tx-fb-clock-delay = <0>;
++		adi,tx-data-delay = <9>;
++		adi,swap-ports-enable;
++
++		/* Mode Setup */
++
++		//adi,split-gain-table-mode-enable;
++
++		/* ENSM Mode */
++		adi,frequency-division-duplex-mode-enable;
++		//adi,ensm-enable-pin-pulse-mode-enable;
++		//adi,ensm-enable-txnrx-control-enable;
++
++
++		/* adi,rx-rf-port-input-select:
++		 * 0 = (RX1A_N &  RX1A_P) and (RX2A_N & RX2A_P) enabled; balanced
++		 * 1 = (RX1B_N &  RX1B_P) and (RX2B_N & RX2B_P) enabled; balanced
++		 * 2 = (RX1C_N &  RX1C_P) and (RX2C_N & RX2C_P) enabled; balanced
++		 *
++		 * 3 = RX1A_N and RX2A_N enabled; unbalanced
++		 * 4 = RX1A_P and RX2A_P enabled; unbalanced
++		 * 5 = RX1B_N and RX2B_N enabled; unbalanced
++		 * 6 = RX1B_P and RX2B_P enabled; unbalanced
++		 * 7 = RX1C_N and RX2C_N enabled; unbalanced
++		 * 8 = RX1C_P and RX2C_P enabled; unbalanced
++		 */
++
++		adi,rx-rf-port-input-select = <0>; /* (RX1A_N &  RX1A_P) and (RX2A_N & RX2A_P) enabled; balanced */
++		adi,rx-rf-port-input-select-lock-enable;
++
++		/* adi,tx-rf-port-input-select:
++		 * 0	TX1A, TX2A
++		 * 1	TX1B, TX2B
++		 */
++
++		adi,tx-rf-port-input-select = <0>; /* TX1A, TX2A */
++		adi,tx-rf-port-input-select-lock-enable;
++
++		//adi,update-tx-gain-in-alert-enable;
++		adi,tx-attenuation-mdB = <10000>;
++		adi,tx-lo-powerdown-managed-enable;
++
++		adi,rf-rx-bandwidth-hz = <18000000>;
++		adi,rf-tx-bandwidth-hz = <18000000>;
++		adi,rx-synthesizer-frequency-hz = /bits/ 64 <2400000000>;
++		adi,tx-synthesizer-frequency-hz = /bits/ 64 <2450000000>;
++
++		/*				BBPLL     ADC        R2CLK     R1CLK    CLKRF    RSAMPL  */
++		adi,rx-path-clock-frequencies = <983040000 245760000 122880000 61440000 30720000 30720000>;
++		/*				BBPLL     DAC        T2CLK     T1CLK    CLKTF    TSAMPL  */
++		adi,tx-path-clock-frequencies = <983040000 122880000 122880000 61440000 30720000 30720000>;
++
++		/* Gain Control */
++
++		/* adi,gc-rx[1|2]-mode:
++		 * 0 = RF_GAIN_MGC
++		 * 1 = RF_GAIN_FASTATTACK_AGC
++		 * 2 = RF_GAIN_SLOWATTACK_AGC
++		 * 3 = RF_GAIN_HYBRID_AGC
++		 */
++
++		adi,gc-rx1-mode = <2>;
++		adi,gc-rx2-mode = <2>;
++		adi,gc-adc-ovr-sample-size = <4>; /* sum 4 samples */
++		adi,gc-adc-small-overload-thresh = <47>; /* sum of squares */
++		adi,gc-adc-large-overload-thresh = <58>; /* sum of squares */
++		adi,gc-lmt-overload-high-thresh = <800>; /* mV */
++		adi,gc-lmt-overload-low-thresh = <704>; /* mV */
++		adi,gc-dec-pow-measurement-duration = <8192>; /* 0..524288 Samples */
++		adi,gc-low-power-thresh = <24>; /* 0..-64 dBFS vals are set pos */
++		//adi,gc-dig-gain-enable;
++		//adi,gc-max-dig-gain = <15>;
++
++		/* Manual Gain Control Setup */
++
++		//adi,mgc-rx1-ctrl-inp-enable; /* uncomment to use ctrl inputs */
++		//adi,mgc-rx2-ctrl-inp-enable; /* uncomment to use ctrl inputs */
++		adi,mgc-inc-gain-step = <2>;
++		adi,mgc-dec-gain-step = <2>;
++
++		/* adi,mgc-split-table-ctrl-inp-gain-mode:
++		 * (relevant if adi,split-gain-table-mode-enable is set)
++		 * 0 = AGC determine this
++		 * 1 = only in LPF
++		 * 2 = only in LMT
++		 */
++
++		adi,mgc-split-table-ctrl-inp-gain-mode = <0>;
++
++		/* Automatic Gain Control Setup */
++
++		adi,agc-attack-delay-extra-margin-us= <1>; /* us */
++		adi,agc-outer-thresh-high = <5>; /* -dBFS */
++		adi,agc-outer-thresh-high-dec-steps = <2>; /* 0..15 */
++		adi,agc-inner-thresh-high = <10>; /* -dBFS */
++		adi,agc-inner-thresh-high-dec-steps = <1>; /* 0..7 */
++		adi,agc-inner-thresh-low = <12>; /* -dBFS */
++		adi,agc-inner-thresh-low-inc-steps = <1>; /* 0..7 */
++		adi,agc-outer-thresh-low = <18>; /* -dBFS */
++		adi,agc-outer-thresh-low-inc-steps = <2>; /* 0..15 */
++
++		adi,agc-adc-small-overload-exceed-counter = <10>; /* 0..15 */
++		adi,agc-adc-large-overload-exceed-counter = <10>; /* 0..15 */
++		adi,agc-adc-large-overload-inc-steps = <2>; /* 0..15 */
++		//adi,agc-adc-lmt-small-overload-prevent-gain-inc-enable;
++		adi,agc-lmt-overload-large-exceed-counter = <10>; /* 0..15 */
++		adi,agc-lmt-overload-small-exceed-counter = <10>; /* 0..15 */
++		adi,agc-lmt-overload-large-inc-steps = <2>; /* 0..7 */
++		//adi,agc-dig-saturation-exceed-counter = <3>; /* 0..15 */
++		//adi,agc-dig-gain-step-size = <4>; /* 1..8 */
++
++		//adi,agc-sync-for-gain-counter-enable;
++		adi,agc-gain-update-interval-us = <1000>;  /* 1ms */
++		//adi,agc-immed-gain-change-if-large-adc-overload-enable;
++		//adi,agc-immed-gain-change-if-large-lmt-overload-enable;
++
++		/* Fast AGC */
++
++		adi,fagc-dec-pow-measurement-duration = <64>; /* 64 Samples */
++                //adi,fagc-allow-agc-gain-increase-enable;
++                adi,fagc-lp-thresh-increment-steps = <1>;
++                adi,fagc-lp-thresh-increment-time = <5>;
++
++                adi,fagc-energy-lost-stronger-sig-gain-lock-exit-cnt = <8>;
++                adi,fagc-final-overrange-count = <3>;
++                //adi,fagc-gain-increase-after-gain-lock-enable;
++                adi,fagc-gain-index-type-after-exit-rx-mode = <0>;
++                adi,fagc-lmt-final-settling-steps = <1>;
++                adi,fagc-lock-level = <10>;
++                adi,fagc-lock-level-gain-increase-upper-limit = <5>;
++                adi,fagc-lock-level-lmt-gain-increase-enable;
++
++                adi,fagc-lpf-final-settling-steps = <1>;
++                adi,fagc-optimized-gain-offset = <5>;
++                adi,fagc-power-measurement-duration-in-state5 = <64>;
++                adi,fagc-rst-gla-engergy-lost-goto-optim-gain-enable;
++                adi,fagc-rst-gla-engergy-lost-sig-thresh-below-ll = <10>;
++                adi,fagc-rst-gla-engergy-lost-sig-thresh-exceeded-enable;
++                adi,fagc-rst-gla-if-en-agc-pulled-high-mode = <0>;
++                adi,fagc-rst-gla-large-adc-overload-enable;
++                adi,fagc-rst-gla-large-lmt-overload-enable;
++                adi,fagc-rst-gla-stronger-sig-thresh-above-ll = <10>;
++                adi,fagc-rst-gla-stronger-sig-thresh-exceeded-enable;
++                adi,fagc-state-wait-time-ns = <260>;
++                adi,fagc-use-last-lock-level-for-set-gain-enable;
++
++		/* RSSI */
++
++		/* adi,rssi-restart-mode:
++		 * 0 = AGC_IN_FAST_ATTACK_MODE_LOCKS_THE_GAIN,
++		 * 1 = EN_AGC_PIN_IS_PULLED_HIGH,
++		 * 2 = ENTERS_RX_MODE,
++		 * 3 = GAIN_CHANGE_OCCURS,
++		 * 4 = SPI_WRITE_TO_REGISTER,
++		 * 5 = GAIN_CHANGE_OCCURS_OR_EN_AGC_PIN_PULLED_HIGH,
++		 */
++		adi,rssi-restart-mode = <3>;
++		//adi,rssi-unit-is-rx-samples-enable;
++		adi,rssi-delay = <1>; /* 1us */
++		adi,rssi-wait = <1>; /* 1us */
++		adi,rssi-duration = <1000>; /* 1ms */
++
++		/* Control Outputs */
++		adi,ctrl-outs-index = <0>;
++		adi,ctrl-outs-enable-mask = <0xFF>;
++
++		/* AuxADC Temp Sense Control */
++
++		adi,temp-sense-measurement-interval-ms = <1000>;
++		adi,temp-sense-offset-signed = <0xCE>;
++		adi,temp-sense-periodic-measurement-enable;
++
++		/* AuxDAC Control */
++
++		adi,aux-dac-manual-mode-enable;
++
++		adi,aux-dac1-default-value-mV = <0>;
++		//adi,aux-dac1-active-in-rx-enable;
++		//adi,aux-dac1-active-in-tx-enable;
++		//adi,aux-dac1-active-in-alert-enable;
++		adi,aux-dac1-rx-delay-us = <0>;
++		adi,aux-dac1-tx-delay-us = <0>;
++
++		adi,aux-dac2-default-value-mV = <0>;
++		//adi,aux-dac2-active-in-rx-enable;
++		//adi,aux-dac2-active-in-tx-enable;
++		//adi,aux-dac2-active-in-alert-enable;
++		adi,aux-dac2-rx-delay-us = <0>;
++		adi,aux-dac2-tx-delay-us = <0>;
++
++		/* Control GPIOs */
++
++		en_agc-gpios = <&gpio0 66 0>;
++		reset-gpios = <&gpio0 67 0>;
++		
++	};
++};
++
+diff --git a/arch/arm/configs/zynq_libre_defconfig b/arch/arm/configs/zynq_libre_defconfig
+new file mode 100644
+index 000000000000..6d7d9caf610c
+--- /dev/null
++++ b/arch/arm/configs/zynq_libre_defconfig
+@@ -0,0 +1,286 @@
++CONFIG_SYSVIPC=y
++CONFIG_USELIB=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_PREEMPT=y
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_LOG_BUF_SHIFT=15
++CONFIG_CGROUPS=y
++CONFIG_BLK_DEV_INITRD=y
++# CONFIG_RD_BZIP2 is not set
++# CONFIG_RD_LZMA is not set
++# CONFIG_RD_XZ is not set
++# CONFIG_RD_LZO is not set
++# CONFIG_RD_LZ4 is not set
++CONFIG_CC_OPTIMIZE_FOR_SIZE=y
++CONFIG_SYSCTL_SYSCALL=y
++CONFIG_EMBEDDED=y
++CONFIG_PERF_EVENTS=y
++CONFIG_SLAB=y
++CONFIG_ARCH_ZYNQ=y
++
++CONFIG_MMC=y
++CONFIG_MMC_SDHCI=y
++CONFIG_MMC_SDHCI_PLTFM=y
++CONFIG_MMC_SDHCI_OF_ARASAN=y
++
++CONFIG_UEVENT_HELPER=y
++CONFIG_MACB=y
++CONFIG_MDIO_BITBANG=y
++CONFIG_MARVELL_PHY=y
++CONFIG_XILINX_GMII2RGMII=y
++CONFIG_USB_NET_DM9601=y
++
++CONFIG_XILINX_RESET_CODE=y
++CONFIG_PL310_ERRATA_588369=y
++CONFIG_PL310_ERRATA_727915=y
++CONFIG_PL310_ERRATA_769419=y
++# CONFIG_ARM_ERRATA_643719 is not set
++CONFIG_ARM_ERRATA_754322=y
++CONFIG_ARM_ERRATA_754327=y
++CONFIG_ARM_ERRATA_764369=y
++CONFIG_ARM_ERRATA_775420=y
++CONFIG_SMP=y
++CONFIG_SCHED_MC=y
++CONFIG_SCHED_SMT=y
++CONFIG_HIGHMEM=y
++# CONFIG_HIGHPTE is not set
++CONFIG_ZBOOT_ROM_TEXT=0x0
++CONFIG_ZBOOT_ROM_BSS=0x0
++CONFIG_CMDLINE="console=ttyPS0,115200n8 root=/dev/ram rw earlyprintk"
++CONFIG_CPU_IDLE=y
++CONFIG_CPU_IDLE_GOV_MENU=y
++CONFIG_ARM_ZYNQ_CPUIDLE=y
++CONFIG_VFP=y
++CONFIG_NEON=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_MODULE_FORCE_UNLOAD=y
++CONFIG_MODVERSIONS=y
++# CONFIG_BLK_DEV_BSG is not set
++# CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
++# CONFIG_COMPACTION is not set
++CONFIG_CMA=y
++CONFIG_NET=y
++CONFIG_PACKET=y
++CONFIG_UNIX=y
++CONFIG_INET=y
++CONFIG_IP_MULTICAST=y
++CONFIG_IP_PNP=y
++CONFIG_IP_PNP_DHCP=y
++CONFIG_IP_PNP_BOOTP=y
++CONFIG_IP_PNP_RARP=y
++CONFIG_NET_IPIP=m
++# CONFIG_IPV6 is not set
++CONFIG_VLAN_8021Q=m
++CONFIG_CFG80211=y
++CONFIG_MAC80211=y
++CONFIG_MAC80211_LEDS=y
++CONFIG_RFKILL=y
++CONFIG_RFKILL_INPUT=y
++CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++CONFIG_DMA_CMA=y
++CONFIG_CMA_SIZE_MBYTES=256
++CONFIG_CONNECTOR=y
++CONFIG_MTD=y
++CONFIG_MTD_CMDLINE_PARTS=y
++CONFIG_MTD_BLOCK=y
++CONFIG_MTD_CFI=y
++CONFIG_MTD_CFI_AMDSTD=y
++CONFIG_MTD_PHYSMAP=y
++CONFIG_MTD_PHYSMAP_OF=y
++CONFIG_MTD_M25P80=y
++CONFIG_MTD_SPI_NOR=y
++# CONFIG_MTD_SPI_NOR_USE_4K_SECTORS is not set
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=16384
++CONFIG_SRAM=y
++# CONFIG_MATHWORKS_IP_CORE is not set
++CONFIG_SCSI=y
++CONFIG_BLK_DEV_SD=y
++CONFIG_CHR_DEV_SG=y
++CONFIG_NETDEVICES=y
++# CONFIG_NET_VENDOR_ALACRITECH is not set
++# CONFIG_NET_VENDOR_AMAZON is not set
++# CONFIG_NET_VENDOR_AQUANTIA is not set
++# CONFIG_NET_VENDOR_ARC is not set
++# CONFIG_NET_VENDOR_BROADCOM is not set
++# CONFIG_NET_VENDOR_CIRRUS is not set
++# CONFIG_NET_VENDOR_EZCHIP is not set
++# CONFIG_NET_VENDOR_FARADAY is not set
++# CONFIG_NET_VENDOR_HISILICON is not set
++# CONFIG_NET_VENDOR_HUAWEI is not set
++# CONFIG_NET_VENDOR_INTEL is not set
++# CONFIG_NET_VENDOR_MARVELL is not set
++# CONFIG_NET_VENDOR_MELLANOX is not set
++# CONFIG_NET_VENDOR_MICREL is not set
++# CONFIG_NET_VENDOR_MICROCHIP is not set
++# CONFIG_NET_VENDOR_NATSEMI is not set
++# CONFIG_NET_VENDOR_NETRONOME is not set
++# CONFIG_NET_VENDOR_QUALCOMM is not set
++# CONFIG_NET_VENDOR_RENESAS is not set
++# CONFIG_NET_VENDOR_ROCKER is not set
++# CONFIG_NET_VENDOR_SAMSUNG is not set
++# CONFIG_NET_VENDOR_SEEQ is not set
++# CONFIG_NET_VENDOR_SOLARFLARE is not set
++# CONFIG_NET_VENDOR_SMSC is not set
++# CONFIG_NET_VENDOR_STMICRO is not set
++# CONFIG_NET_VENDOR_SYNOPSYS is not set
++# CONFIG_NET_VENDOR_VIA is not set
++# CONFIG_NET_VENDOR_WIZNET is not set
++# CONFIG_NET_VENDOR_XILINX is not set
++CONFIG_USB_RTL8152=y
++CONFIG_USB_LAN78XX=y
++CONFIG_USB_USBNET=y
++# CONFIG_USB_NET_CDC_NCM is not set
++CONFIG_USB_NET_SMSC75XX=y
++CONFIG_USB_NET_SMSC95XX=y
++# CONFIG_USB_NET_NET1080 is not set
++CONFIG_USB_NET_RNDIS_HOST=y
++# CONFIG_USB_NET_CDC_SUBSET is not set
++# CONFIG_USB_NET_ZAURUS is not set
++# CONFIG_WLAN_VENDOR_ADMTEK is not set
++# CONFIG_WLAN_VENDOR_ATH is not set
++# CONFIG_WLAN_VENDOR_ATMEL is not set
++# CONFIG_WLAN_VENDOR_BROADCOM is not set
++# CONFIG_WLAN_VENDOR_CISCO is not set
++# CONFIG_WLAN_VENDOR_INTEL is not set
++# CONFIG_WLAN_VENDOR_INTERSIL is not set
++# CONFIG_WLAN_VENDOR_MARVELL is not set
++# CONFIG_WLAN_VENDOR_MEDIATEK is not set
++CONFIG_RT2X00=y
++CONFIG_RT2500USB=y
++CONFIG_RT73USB=y
++CONFIG_RT2800USB=y
++CONFIG_RT2800USB_RT3573=y
++CONFIG_RT2800USB_RT53XX=y
++CONFIG_RT2800USB_RT55XX=y
++CONFIG_RT2800USB_UNKNOWN=y
++CONFIG_RTL8187=y
++CONFIG_RTL8192CU=y
++# CONFIG_RTLWIFI_DEBUG is not set
++CONFIG_RTL8XXXU=y
++CONFIG_RTL8XXXU_UNTESTED=y
++# CONFIG_WLAN_VENDOR_RSI is not set
++# CONFIG_WLAN_VENDOR_ST is not set
++# CONFIG_WLAN_VENDOR_TI is not set
++# CONFIG_WLAN_VENDOR_ZYDAS is not set
++CONFIG_INPUT_FF_MEMLESS=y
++CONFIG_INPUT_SPARSEKMAP=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_KEYBOARD_GPIO=y
++# CONFIG_INPUT_MOUSE is not set
++CONFIG_VT_HW_CONSOLE_BINDING=y
++# CONFIG_LEGACY_PTYS is not set
++CONFIG_SERIAL_XILINX_PS_UART=y
++CONFIG_SERIAL_XILINX_PS_UART_CONSOLE=y
++# CONFIG_HW_RANDOM is not set
++CONFIG_I2C=y
++CONFIG_I2C_CHARDEV=y
++CONFIG_I2C_CADENCE=y
++CONFIG_I2C_GPIO=y
++CONFIG_I2C_XILINX=y
++CONFIG_SPI=y
++CONFIG_SPI_AXI_SPI_ENGINE=y
++CONFIG_SPI_CADENCE=y
++CONFIG_SPI_XILINX=y
++CONFIG_SPI_ZYNQ_QSPI=y
++CONFIG_SPI_SPIDEV=y
++CONFIG_GPIOLIB=y
++CONFIG_GPIO_SYSFS=y
++CONFIG_GPIO_ZYNQ=y
++CONFIG_POWER_SUPPLY=y
++CONFIG_THERMAL=y
++CONFIG_WATCHDOG=y
++CONFIG_XILINX_WATCHDOG=y
++CONFIG_CADENCE_WATCHDOG=y
++CONFIG_SSB=y
++CONFIG_REGULATOR=y
++CONFIG_REGULATOR_FIXED_VOLTAGE=y
++CONFIG_HIDRAW=y
++CONFIG_USB_HIDDEV=y
++CONFIG_USB=y
++CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
++CONFIG_USB_OTG=y
++CONFIG_USB_EHCI_HCD=y
++# CONFIG_USB_EHCI_TT_NEWSCHED is not set
++CONFIG_USB_STORAGE=y
++CONFIG_USB_CHIPIDEA=y
++CONFIG_USB_CHIPIDEA_UDC=y
++CONFIG_USB_CHIPIDEA_HOST=y
++CONFIG_USB_SERIAL=y
++CONFIG_USB_SERIAL_GENERIC=y
++CONFIG_USB_SERIAL_FTDI_SIO=y
++CONFIG_USB_ULPI=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_VBUS_DRAW=500
++CONFIG_USB_GADGET_XILINX=y
++CONFIG_USB_CONFIGFS=y
++CONFIG_USB_CONFIGFS_SERIAL=y
++CONFIG_USB_CONFIGFS_ACM=y
++CONFIG_USB_CONFIGFS_NCM=y
++CONFIG_USB_CONFIGFS_ECM=y
++CONFIG_USB_CONFIGFS_ECM_SUBSET=y
++CONFIG_USB_CONFIGFS_RNDIS=y
++CONFIG_USB_CONFIGFS_EEM=y
++CONFIG_USB_CONFIGFS_MASS_STORAGE=y
++CONFIG_USB_CONFIGFS_F_FS=y
++CONFIG_NEW_LEDS=y
++CONFIG_LEDS_CLASS=y
++CONFIG_LEDS_GPIO=y
++CONFIG_LEDS_TRIGGER_TIMER=y
++CONFIG_LEDS_TRIGGER_ONESHOT=y
++CONFIG_LEDS_TRIGGER_HEARTBEAT=y
++CONFIG_LEDS_TRIGGER_CPU=y
++CONFIG_LEDS_TRIGGER_GPIO=y
++CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
++CONFIG_DMADEVICES=y
++CONFIG_AXI_DMAC=y
++CONFIG_UIO=y
++CONFIG_UIO_PDRV_GENIRQ=y
++CONFIG_UIO_DMEM_GENIRQ=y
++CONFIG_UIO_XILINX_APM=y
++CONFIG_STAGING=y
++CONFIG_R8712U=y
++CONFIG_R8188EU=y
++CONFIG_COMMON_CLK_AXI_CLKGEN=y
++# CONFIG_IOMMU_SUPPORT is not set
++CONFIG_MEMORY=y
++CONFIG_IIO=y
++CONFIG_ADM1177=y
++CONFIG_AD9361=y
++CONFIG_AD9361_EXT_BAND_CONTROL=y
++CONFIG_ADMC=y
++CONFIG_XILINX_XADC=y
++CONFIG_CF_AXI_DDS=y
++CONFIG_FPGA=y
++CONFIG_FPGA_MGR_ZYNQ_FPGA=y
++CONFIG_EXT4_FS=y
++# CONFIG_DNOTIFY is not set
++CONFIG_MSDOS_FS=y
++CONFIG_VFAT_FS=y
++CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
++CONFIG_JFFS2_FS=y
++CONFIG_JFFS2_COMPRESSION_OPTIONS=y
++# CONFIG_NETWORK_FILESYSTEMS is not set
++CONFIG_NLS_CODEPAGE_437=y
++CONFIG_NLS_ASCII=y
++CONFIG_NLS_ISO8859_1=y
++CONFIG_CRYPTO_ECB=y
++CONFIG_CRYPTO_MICHAEL_MIC=y
++CONFIG_DEBUG_INFO=y
++# CONFIG_ENABLE_MUST_CHECK is not set
++CONFIG_DEBUG_FS=y
++CONFIG_DETECT_HUNG_TASK=y
++CONFIG_DEFAULT_HUNG_TASK_TIMEOUT=20
++# CONFIG_SCHED_DEBUG is not set
++# CONFIG_DEBUG_PREEMPT is not set
++CONFIG_RCU_CPU_STALL_TIMEOUT=60
++# CONFIG_FTRACE is not set
++CONFIG_DEBUG_LL=y
++CONFIG_DEBUG_ZYNQ_UART0=y
++CONFIG_EARLY_PRINTK=y
