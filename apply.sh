@@ -1,4 +1,4 @@
-cd plutosdr-fw_0.37_libre
+cd plutosdr-fw_0.38_libre
 git apply ../patches/fw.diff
 cd hdl
 git apply ../../patches/hdl.diff

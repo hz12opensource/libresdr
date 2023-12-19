@@ -5,23 +5,19 @@ The board schematics from one of the Aliexpress sellers is included, see zynqsdr
 This set of patches was not tested for full functionality in every possible mode, probably contains bugs or incorrect interpretations of schematics and intended for fellow hackers to get started with low level software and FPGA modifications.
 
 Prerequisites:
-Prepare development environment for PlutoSDR v0.37, for details see 
-https://github.com/analogdevicesinc/plutosdr-fw/tree/v0.37
+Prepare development environment for PlutoSDR v0.38, for details see 
+https://github.com/analogdevicesinc/plutosdr-fw/tree/v0.38
 
-This includes Vivado and Vitis 2021.2, please use only supported build host environment
+This includes Vivado and Vitis 2022.2, please use only supported build host environment
 
 How to build?
 
 Extract this set of patches to a new directory, clone plutosdr software, please note the directory name in the apply.sh script, adjust as needed.  
 ```sh
-mkdir libresdr-fw-patch_v0.37_src
-cd  libresdr-fw-patch_v0.37_scr
-git clone --branch v0.37 https://github.com/analogdevicesinc/plutosdr-fw.git  libresdr-fw-patch_v0.37
+git clone --branch v0.38 --recursive https://github.com/analogdevicesinc/plutosdr-fw.git plutosdr-fw_0.38_libre
 ./apply.sh
-cd libresdr-fw-patch_v0.37
-export CROSS_COMPILE=arm-linux-gnueabihf-
-export PATH=$PATH:/opt/Xilinx/Vitis/2021.2/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin
-export VIVADO_SETTINGS=/opt/Xilinx/Vivado/2021.2/settings64.sh
+cd plutosdr-fw_0.38_libre
+export VIVADO_SETTINGS=/opt/Xilinx/Vivado/2022.2/settings64.sh
 export TARGET=libre
 make
 make sdimg

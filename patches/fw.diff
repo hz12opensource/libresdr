@@ -1,8 +1,8 @@
 diff --git a/Makefile b/Makefile
-index b06bc25..032a8c0 100644
+index 0dc9c4b..4ef2d39 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -38,8 +38,8 @@ $(error "      3] export VIVADO_VERSION=v20xx.x")
+@@ -27,8 +27,8 @@ $(error "      3] export VIVADO_VERSION=v20xx.x")
  	endif
  endif
  
@@ -13,7 +13,7 @@ index b06bc25..032a8c0 100644
  
  # Include target specific constants
  include scripts/$(TARGET).mk
-@@ -59,7 +59,7 @@ endif
+@@ -48,7 +48,7 @@ endif
  
  ifeq ($(findstring $(TARGET),$(SUPPORTED_TARGETS)),)
  all:
@@ -22,26 +22,24 @@ index b06bc25..032a8c0 100644
  	exit 1
  else
  all: clean-build $(TARGETS) zip-all legal-info
-@@ -97,13 +97,16 @@ build/uboot-env.bin: build/uboot-env.txt
- linux/arch/arm/boot/zImage:
- 	make -C linux ARCH=arm zynq_$(TARGET)_defconfig
- 	make -C linux -j $(NCORES) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) zImage UIMAGE_LOADADDR=0x8000
-+	make -C linux -j $(NCORES) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) uImage UIMAGE_LOADADDR=0x8000
+@@ -91,12 +91,15 @@ build/uboot-env.bin: build/uboot-env.txt
+ linux/arch/arm/boot/zImage: TOOLCHAIN
+ 	$(TOOLS_PATH) make -C linux ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) zynq_$(TARGET)_defconfig
+ 	$(TOOLS_PATH) make -C linux -j $(NCORES) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) zImage UIMAGE_LOADADDR=0x8000
++	$(TOOLS_PATH) make -C linux -j $(NCORES) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) uImage UIMAGE_LOADADDR=0x8000
  
  .PHONY: linux/arch/arm/boot/zImage
 -
 +.PHONY: linux/arch/arm/boot/uImage
  
- build/zImage: linux/arch/arm/boot/zImage  | build
+ build/zImage: linux/arch/arm/boot/zImage | build
  	cp $< $@
--
 +build/uImage: linux/arch/arm/boot/uImage  | build
 +	cp $< $@
-+	
+ 
  ### Device Tree ###
  
- linux/arch/arm/boot/dts/%.dtb: linux/arch/arm/boot/dts/%.dts  linux/arch/arm/boot/dts/zynq-pluto-sdr.dtsi
-@@ -179,6 +182,7 @@ build/$(TARGET).dfu: build/$(TARGET).itb
+@@ -177,6 +180,7 @@ build/$(TARGET).dfu: build/$(TARGET).itb
  clean-build:
  	rm -f $(notdir $(wildcard build/*))
  	rm -rf build/*
@@ -49,7 +47,7 @@ index b06bc25..032a8c0 100644
  
  clean:
  	make -C u-boot-xlnx clean
-@@ -187,6 +191,27 @@ clean:
+@@ -185,6 +189,27 @@ clean:
  	make -C hdl clean
  	rm -f $(notdir $(wildcard build/*))
  	rm -rf build/*
