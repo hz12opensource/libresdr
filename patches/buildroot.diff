@@ -251,7 +251,7 @@ index 0000000000..b599f699b6
 +	mkdir -p /dev/iio_ffs
 +	mount iio_ffs -t functionfs /dev/iio_ffs 2> /dev/null
 +
-+	start-stop-daemon -S -b -q -m -p /var/run/iiod.pid -x  /usr/sbin/iiod  -- $IIOD_OPTS
++	start-stop-daemon -S -b -q -m -p /var/run/iiod.pid -x /usr/bin/chrt -- -r 99 /usr/bin/taskset -c 1 /usr/sbin/iiod $IIOD_OPTS
 +	sleep 0.2
 +
 +	echo ci_hdrc.0 > $GADGET/UDC
@@ -486,15 +486,15 @@ index 0000000000..78433a60d7
 +
 +case "$1" in
 +	start)
-+		echo -n "Starting dhcpd Daemon & httpd Server: "
++		echo -n "Starting dhcpd Daemon: "
 +		start-stop-daemon -S -q -p /var/run/udhcpd.pid -x /usr/sbin/udhcpd -- $UDHCPD_CONF
-+		httpd -h /www
++		# httpd -h /www
 +		[ $? = 0 ] && echo "OK" || echo "FAIL"
 +		;;
 +
 +	stop)
-+		echo -n "Stopping dhcpd Daemon & httpd Server: "
-+		killall -7 httpd
++		echo -n "Stopping dhcpd Daemon: "
++		# killall -7 httpd
 +		start-stop-daemon -K -q -p /var/run/udhcpd.pid 2>/dev/null
 +		[ $? = 0 ] && echo "OK" || echo "FAIL"
 +		;;
@@ -1360,8 +1360,8 @@ index 0000000000..88728cc9f2
 +# CONFIG_FEATURE_SWAPON_PRI is not set
 +CONFIG_SWAPOFF=y
 +CONFIG_SWITCH_ROOT=y
-+# CONFIG_TASKSET is not set
-+# CONFIG_FEATURE_TASKSET_FANCY is not set
++CONFIG_TASKSET=y
++CONFIG_FEATURE_TASKSET_FANCY=y
 +CONFIG_UEVENT=y
 +CONFIG_UMOUNT=y
 +CONFIG_FEATURE_UMOUNT_ALL=y
@@ -1699,10 +1699,10 @@ index 0000000000..88728cc9f2
 +CONFIG_FEATURE_TOP_INTERACTIVE=y
 +CONFIG_FEATURE_TOP_CPU_USAGE_PERCENTAGE=y
 +CONFIG_FEATURE_TOP_CPU_GLOBAL_PERCENTS=y
-+# CONFIG_FEATURE_TOP_SMP_CPU is not set
-+# CONFIG_FEATURE_TOP_DECIMALS is not set
-+# CONFIG_FEATURE_TOP_SMP_PROCESS is not set
-+# CONFIG_FEATURE_TOPMEM is not set
++CONFIG_FEATURE_TOP_SMP_CPU=y
++CONFIG_FEATURE_TOP_DECIMALS=y
++CONFIG_FEATURE_TOP_SMP_PROCESS=y
++CONFIG_FEATURE_TOPMEM=y
 +CONFIG_UPTIME=y
 +# CONFIG_FEATURE_UPTIME_UTMP_SUPPORT is not set
 +CONFIG_WATCH=y
@@ -8999,7 +8999,7 @@ new file mode 100644
 index 0000000000..600f5df2ee
 --- /dev/null
 +++ b/configs/zynq_libre_defconfig
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,68 @@
 +BR2_arm=y
 +BR2_cortex_a9=y
 +BR2_ARM_ENABLE_NEON=y
@@ -9007,7 +9007,11 @@ index 0000000000..600f5df2ee
 +BR2_ARM_FPU_NEON=y
 +BR2_TOOLCHAIN_EXTERNAL=y
 +BR2_TOOLCHAIN_EXTERNAL_LINARO_ARM=y
-+BR2_OPTIMIZE_2=y
++BR2_OPTIMIZE_3=y
++BR2_PACKAGE_ETHTOOL=y
++BR2_PACKAGE_ETHTOOL_PRETTY_PRINT=y
++BR2_PACKAGE_IPERF3=y
++BR2_PACKAGE_HTOP=y
 +BR2_TARGET_GENERIC_HOSTNAME="libre"
 +BR2_TARGET_GENERIC_ISSUE="Welcome to LibreSDR"
 +BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_MDEV=y

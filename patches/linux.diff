@@ -544,7 +544,7 @@ index 000000000000..994013f83ecc
 +# CONFIG_RD_XZ is not set
 +# CONFIG_RD_LZO is not set
 +# CONFIG_RD_LZ4 is not set
-+CONFIG_CC_OPTIMIZE_FOR_SIZE=y
++CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y
 +CONFIG_EMBEDDED=y
 +CONFIG_PERF_EVENTS=y
 +CONFIG_SLAB=y
@@ -816,3 +816,27 @@ index 000000000000..994013f83ecc
 +CONFIG_DEBUG_LL=y
 +CONFIG_DEBUG_ZYNQ_UART0=y
 +CONFIG_EARLY_PRINTK=y
+diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
+index 8355c3895894..81fed5c109db 100644
+--- a/arch/arm/mm/Kconfig
++++ b/arch/arm/mm/Kconfig
+@@ -415,7 +415,6 @@ config CPU_V7
+ 	select CPU_CP15_MPU if !MMU
+ 	select CPU_HAS_ASID if MMU
+ 	select CPU_PABRT_V7
+-	select CPU_SPECTRE if MMU
+ 	select CPU_THUMB_CAPABLE
+ 	select CPU_TLB_V7 if MMU
+ 
+diff --git a/init/Kconfig b/init/Kconfig
+index 11f8a845f259..806c196d5127 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1365,7 +1365,6 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
+ 
+ config CC_OPTIMIZE_FOR_PERFORMANCE_O3
+ 	bool "Optimize more for performance (-O3)"
+-	depends on ARC
+ 	help
+ 	  Choosing this option will pass "-O3" to your compiler to optimize
+ 	  the kernel yet more for performance.
