@@ -8,6 +8,7 @@ with several enhancements:
 * Xinlinx Zynq SoC overclock support (27.5 MSPS achieved with overclock to 1100 MHz CPU + 750 MHz DDR)
 * Use LVDS mode for AD9361 to support max sampling rates in 2T2R mode
 * Based on PlutoSDR v0.38 firmware (Nov 17, 2023)
+* Prebuilt firmware with different overclocking options
 
 There is not a whole lot of information from the manufacturer, but the device
 can be purchased on Aliexpress, eBay and other platforms. The hardware includes
@@ -18,32 +19,54 @@ memory.
 ![LibreSDR](./libresdr.jpg)
 
 The board schematics from one of the Aliexpress sellers is included, see
-`zynqsdr_rev5.pdf`.  This set of patches was not tested for full functionality
+[zynqsdr_rev5.pdf](./zynqsdr_rev5.pdf).  This set of patches was not tested for full functionality
 in every possible mode, probably contains bugs or incorrect interpretations of
 schematics and intended for fellow hackers to get started with low level
 software and FPGA modifications.
 
+## Prebuilt firmware
+
+Checkout the prebuilt firmware under the "Release" section on github.  The base
+clock without overclocking is 750MHz for CPU and 525 MHz for memory, and you
+should be able to run continous 20MSPS with the libiio/PlutoSDR API over gigabit
+Ethernet. Several different overclocked firmware package for the Zynq 7020 SoC
+were provided. With 1100 MHz CPU and 750 MHz memory overclock, I can run 27.5
+MSPS continous sampling on Ubuntu + SDR++.
+
 ## Build
 
-Prepare development environment for PlutoSDR v0.38, for details see 
-https://github.com/analogdevicesinc/plutosdr-fw/tree/v0.38
-
-The build requires Vivado and Vitis 2022.2, please use only supported build
-host environment.
+The build requires Vivado and Vitis 2022.2. I installed these packages to build
+on Ubuntu:
 
 ```sh
+sudo apt install libgmp-dev libmpc-dev git build-essential fakeroot libncurses5-dev libssl-dev ccache dfu-util u-boot-tools device-tree-compiler mtools bc python3 cpio zip unzip rsync file wget flex bison language-pack-en libtinfo5 x11-utils xvfb dbus-x11 libswt-glx-gtk-4-jni libgtk2.0-0
+```
+
+On Ubuntu 23.10, you need to install `libtinfo5` manually:
+
+```sh
+wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.4-2ubuntu0.1_amd64.deb
+sudo dpkg -i libtinfo5_6.4-2ubuntu0.1_amd64.deb
+```
+
+Then build the firware, run these commands in cloned repo:
+
+```sh
+# Clone original v0.38 firware for PlutoSDR
 git clone --branch v0.38 --recursive https://github.com/analogdevicesinc/plutosdr-fw.git plutosdr-fw_0.38_libre
+# Apply patch for LibreSDR
 ./apply.sh
 cd plutosdr-fw_0.38_libre
+# Change Vivado path if you installed it to a different folder.
 export VIVADO_SETTINGS=/opt/Xilinx/Vivado/2022.2/settings64.sh
 export TARGET=libre
 make
 make sdimg
 ```
 
-Make a cup of coffee, then probably one more.  Collect results in build
-directory and in addition a set of files for the sd card in `build_sdimg`
-folder.
+Collect results in build directory and in addition a set of files for the sd
+card in `build_sdimg` folder. Copy the files inside the `build_sdimg` into a
+empty SD Card formated as FAT32 and boot the SDR with the SD card.
 
 ## Performance improvements and overclock
 
