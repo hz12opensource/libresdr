@@ -130,16 +130,16 @@ index 000000000..b4e625d4a
 +ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_BANK_ADDR_COUNT {3}
 +ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_ROW_ADDR_COUNT {15}
 +ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_COL_ADDR_COUNT {10}
-+ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CL {7}
-+ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CWL {5}
-+ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RCD {7}
-+ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RP {7}
++# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CL {7}
++# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CWL {5}
++# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RCD {7}
++# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RP {7}
 +# Increase DDR timing parameters to allow more DDR overclock.
 +# Tested 7-5-7-7 for 625 MHz, 8-6-8-8 for 700 MHz, 9-7-9-9 for 750 MHz, 10-7-10-10 for 775 MHz.
-+# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CL {9}
-+# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CWL {7}
-+# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RCD {9}
-+# ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RP {9}
++ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CL {9}
++ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_CWL {7}
++ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RCD {9}
++ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RP {9}
 +ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RC {48.91}
 +ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_RAS_MIN {35.0}
 +ad_ip_parameter sys_ps7 CONFIG.PCW_UIPARAM_DDR_T_FAW {40.0}

@@ -1,7 +1,18 @@
 diff --git a/Makefile b/Makefile
-index 0dc9c4b..4ef2d39 100644
+index 0dc9c4b..1df051c 100644
 --- a/Makefile
 +++ b/Makefile
+@@ -3,8 +3,8 @@ VIVADO_VERSION ?= 2022.2
+ 
+ # Use Buildroot External Linaro GCC 7.3-2018.05 arm-linux-gnueabihf Toolchain
+ CROSS_COMPILE = arm-linux-gnueabihf-
+-TOOLS_PATH = PATH="$(CURDIR)/buildroot/output/host/bin:$(CURDIR)/buildroot/output/host/sbin:$(PATH)"
+-TOOLCHAIN = $(CURDIR)/buildroot/output/host/bin/$(CROSS_COMPILE)gcc
++TOOLS_PATH = PATH="$(PATH)"
++TOOLCHAIN = /usr/bin/arm-linux-gnueabihf-gcc
+ 
+ NCORES = $(shell grep -c ^processor /proc/cpuinfo)
+ VIVADO_SETTINGS ?= /opt/Xilinx/Vivado/$(VIVADO_VERSION)/settings64.sh
 @@ -27,8 +27,8 @@ $(error "      3] export VIVADO_VERSION=v20xx.x")
  	endif
  endif

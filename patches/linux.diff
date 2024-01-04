@@ -1,3 +1,16 @@
+diff --git a/arch/arm/Makefile b/arch/arm/Makefile
+index 847c31e7c368..4e7bf85efbe0 100644
+--- a/arch/arm/Makefile
++++ b/arch/arm/Makefile
+@@ -61,7 +61,7 @@ KBUILD_CFLAGS	+= $(call cc-option,-fno-ipa-sra)
+ # macro, but instead defines a whole series of macros which makes
+ # testing for a specific architecture or later rather impossible.
+ arch-$(CONFIG_CPU_32v7M)	=-D__LINUX_ARM_ARCH__=7 -march=armv7-m -Wa,-march=armv7-m
+-arch-$(CONFIG_CPU_32v7)		=-D__LINUX_ARM_ARCH__=7 $(call cc-option,-march=armv7-a,-march=armv5t -Wa$(comma)-march=armv7-a)
++arch-$(CONFIG_CPU_32v7)		=-D__LINUX_ARM_ARCH__=7 -march=armv7-a+simd
+ arch-$(CONFIG_CPU_32v6)		=-D__LINUX_ARM_ARCH__=6 $(call cc-option,-march=armv6,-march=armv5t -Wa$(comma)-march=armv6)
+ # Only override the compiler option if ARMv6. The ARMv6K extensions are
+ # always available in ARMv7
 diff --git a/arch/arm/boot/dts/zynq-libre.dts b/arch/arm/boot/dts/zynq-libre.dts
 new file mode 100644
 index 000000000000..3c8d127b7329
@@ -523,7 +536,7 @@ index 000000000000..5a524e0a741f
 +
 diff --git a/arch/arm/configs/zynq_libre_defconfig b/arch/arm/configs/zynq_libre_defconfig
 new file mode 100644
-index 000000000000..994013f83ecc
+index 000000000000..3a78cc84b182
 --- /dev/null
 +++ b/arch/arm/configs/zynq_libre_defconfig
 @@ -0,0 +1,286 @@
@@ -825,6 +838,20 @@ index 8355c3895894..81fed5c109db 100644
  	select CPU_THUMB_CAPABLE
  	select CPU_TLB_V7 if MMU
  
+diff --git a/drivers/iio/adc/ad9361.c b/drivers/iio/adc/ad9361.c
+index 91f166675024..9126b3a7421a 100644
+--- a/drivers/iio/adc/ad9361.c
++++ b/drivers/iio/adc/ad9361.c
+@@ -4051,6 +4051,9 @@ static int ad9361_validate_trx_clock_chain(struct ad9361_rf_phy *phy,
+ 		   ((phy->pdata->port_ctrl.pp_conf[2] & LVDS_MODE) ? 1 : 2) *
+ 		   rx_path_clks[RX_SAMPL_FREQ];
+ 
++	dev_err(&phy->spi->dev,
++		"%s: rx2tx2=%d ppconf=%d dataclk=%d rxclk=%d, MAX_BASEBAND_RATE=%lu", __func__, phy->pdata->rx2tx2, phy->pdata->port_ctrl.pp_conf[2], rx_path_clks[RX_SAMPL_FREQ], data_clk, MAX_BASEBAND_RATE);
++
+ 	/* CMOS Mode */
+ 	if (!(phy->pdata->port_ctrl.pp_conf[2] & LVDS_MODE) &&
+ 		(data_clk > MAX_BASEBAND_RATE)) {
 diff --git a/init/Kconfig b/init/Kconfig
 index 11f8a845f259..806c196d5127 100644
 --- a/init/Kconfig
@@ -837,3 +864,31 @@ index 11f8a845f259..806c196d5127 100644
  	help
  	  Choosing this option will pass "-O3" to your compiler to optimize
  	  the kernel yet more for performance.
+diff --git a/tools/perf/Makefile.perf b/tools/perf/Makefile.perf
+index b856afa6eb52..ba4cf58c241f 100644
+--- a/tools/perf/Makefile.perf
++++ b/tools/perf/Makefile.perf
+@@ -775,12 +775,12 @@ $(OUTPUT)perf-%: %.o $(PERFLIBS)
+ 
+ ifndef NO_PERF_READ_VDSO32
+ $(OUTPUT)perf-read-vdso32: perf-read-vdso.c util/find-map.c
+-	$(QUIET_CC)$(CC) -m32 $(filter -static,$(LDFLAGS)) -Wall -Werror -o $@ perf-read-vdso.c
++	$(QUIET_CC)$(CC) -m32 $(filter -static,$(LDFLAGS)) -Wall -o $@ perf-read-vdso.c
+ endif
+ 
+ ifndef NO_PERF_READ_VDSOX32
+ $(OUTPUT)perf-read-vdsox32: perf-read-vdso.c util/find-map.c
+-	$(QUIET_CC)$(CC) -mx32 $(filter -static,$(LDFLAGS)) -Wall -Werror -o $@ perf-read-vdso.c
++	$(QUIET_CC)$(CC) -mx32 $(filter -static,$(LDFLAGS)) -Wall -o $@ perf-read-vdso.c
+ endif
+ 
+ $(OUTPUT)dlfilters/%.o: dlfilters/%.c include/perf/perf_dlfilter.h
+@@ -1061,7 +1061,7 @@ else
+ endif
+ 
+ $(SKEL_TMP_OUT)/%.bpf.o: util/bpf_skel/%.bpf.c $(LIBBPF) $(SKEL_OUT)/vmlinux.h | $(SKEL_TMP_OUT)
+-	$(QUIET_CLANG)$(CLANG) -g -O2 -target bpf -Wall -Werror $(BPF_INCLUDE) \
++	$(QUIET_CLANG)$(CLANG) -g -O2 -target bpf -Wall $(BPF_INCLUDE) \
+ 	  -c $(filter util/bpf_skel/%.bpf.c,$^) -o $@ && $(LLVM_STRIP) -g $@
+ 
+ $(SKEL_OUT)/%.skel.h: $(SKEL_TMP_OUT)/%.bpf.o | $(BPFTOOL)

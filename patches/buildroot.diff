@@ -134,7 +134,7 @@ index 0000000000..28c5739ffe
 +esac
 diff --git a/board/libre/S23udc b/board/libre/S23udc
 new file mode 100644
-index 0000000000..b599f699b6
+index 0000000000..33cb0a73bd
 --- /dev/null
 +++ b/board/libre/S23udc
 @@ -0,0 +1,168 @@
@@ -475,7 +475,7 @@ index 0000000000..040e7dda6f
 +
 diff --git a/board/libre/S41network b/board/libre/S41network
 new file mode 100644
-index 0000000000..78433a60d7
+index 0000000000..752159965d
 --- /dev/null
 +++ b/board/libre/S41network
 @@ -0,0 +1,30 @@
@@ -685,7 +685,7 @@ index 0000000000..0d093a53fc
 +esac
 diff --git a/board/libre/busybox-1.25.0.config b/board/libre/busybox-1.25.0.config
 new file mode 100644
-index 0000000000..88728cc9f2
+index 0000000000..7a5c3055ac
 --- /dev/null
 +++ b/board/libre/busybox-1.25.0.config
 @@ -0,0 +1,1135 @@
@@ -8996,7 +8996,7 @@ index 0000000000..2c5b0608ce
 +exit 0
 diff --git a/configs/zynq_libre_defconfig b/configs/zynq_libre_defconfig
 new file mode 100644
-index 0000000000..600f5df2ee
+index 0000000000..7273f59474
 --- /dev/null
 +++ b/configs/zynq_libre_defconfig
 @@ -0,0 +1,68 @@

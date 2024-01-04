@@ -1,3 +1,17 @@
+diff --git a/arch/arm/Makefile b/arch/arm/Makefile
+index 6a07cd178e..15989b6f93 100644
+--- a/arch/arm/Makefile
++++ b/arch/arm/Makefile
+@@ -16,8 +16,7 @@ arch-$(CONFIG_CPU_SA1100)	=-march=armv4
+ arch-$(CONFIG_CPU_PXA)		=
+ arch-$(CONFIG_CPU_ARM1136)	=-march=armv5
+ arch-$(CONFIG_CPU_ARM1176)	=-march=armv5t
+-arch-$(CONFIG_CPU_V7)		=$(call cc-option, -march=armv7-a, \
+-				 $(call cc-option, -march=armv7, -march=armv5))
++arch-$(CONFIG_CPU_V7)		=-march=armv7-a+simd
+ arch-$(CONFIG_ARM64)		=-march=armv8-a
+ 
+ # Evaluate arch cc-option calls now
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
 index 7b19efc9b8..bc271aaecc 100644
 --- a/arch/arm/dts/Makefile
