@@ -5,7 +5,7 @@ The repo is based on [day0wl](https://github.com/day0wl)'s [repo](https://github
 with several enhancements:
 
 * Optimized linux kernel and buildroot to support higher practical sampling rates with libiio/PlutoSDR API (20 MSPS without overlock, compared to ~10 MSPS stock)
-* Xinlinx Zynq SoC overclock support (27.5 MSPS achieved with overclock to 1100 MHz CPU + 750 MHz DDR)
+* Xilinx Zynq SoC overclock support (27.5 MSPS achieved with overclock to 1100 MHz CPU + 750 MHz DDR)
 * Use LVDS mode for AD9361 to support max sampling rates in 2T2R mode
 * Based on PlutoSDR v0.38 firmware (Nov 17, 2023)
 * Prebuilt firmware with different overclocking options
@@ -29,10 +29,10 @@ software and FPGA modifications.
 Checkout the prebuilt firmware under the ["Release"
 section](https://github.com/hz12opensource/libresdr/releases) on github.  The
 base clock without overclocking is 750MHz for CPU and 525 MHz for memory, and
-you should be able to run continous 20MSPS with the libiio/PlutoSDR API over
+you should be able to run continuous 20MSPS with the libiio/PlutoSDR API over
 gigabit Ethernet. Several different overclocked firmware package for the Zynq
 7020 SoC were provided. With 1100 MHz CPU and 750 MHz memory overclock, I can
-run 27.5 MSPS continous sampling on Ubuntu + SDR++.
+run 27.5 MSPS continuous sampling on Ubuntu + SDR++.
 
 ## Build
 
@@ -50,7 +50,7 @@ wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.4-2ub
 sudo dpkg -i libtinfo5_6.4-2ubuntu0.1_amd64.deb
 ```
 
-Then build the firware, run these commands in cloned repo:
+Then build the firmware, run these commands in cloned repo:
 
 ```sh
 # Clone original v0.38 firware for PlutoSDR
@@ -67,7 +67,7 @@ make sdimg
 
 Collect results in build directory and in addition a set of files for the sd
 card in `build_sdimg` folder. Copy the files inside the `build_sdimg` into a
-empty SD Card formated as FAT32 and boot the SDR with the SD card. The default
+empty SD Card formatted as FAT32 and boot the SDR with the SD card. The default
 IP for connecting to SDR is 192.168.1.10.
 
 ## Performance improvements and overclock
@@ -98,7 +98,7 @@ for `PCW_UIPARAM_DDR_CL` and a few others). With a 9-7-9-9 timing I can
 overclock mine to 750 MHz.
 
 With the overclock (1100 MHz CPU + 750 MHz DDR), I can achieve about 27.5 MSPS
-continous sampling on Ubuntu and SDR++, and above that the limitation is
+continuous sampling on Ubuntu and SDR++, and above that the limitation is
 actually my host computer (Ethernet running at ~900Mbps and the CPU needs to
 process everything very fast). You need to enlarge the libiio block size in
 your SDR application to achieve high sampling rates. I use SDR++ and the
@@ -134,7 +134,7 @@ to 115200N8. Gigabit Ethernet is enabled, IP address is set by default to
 
 You can also use a full AD provided linux build, just replace BOOT.BIN and
 device tree file from this build and it should be able to mount the SD card as
-the root file system, This will aloow you to run any Linux applications or
+the root file system, This will allow you to run any Linux applications or
 scripts directly on LibreSDR.
 
 From this point you are on your own, but pull requests and enhancements are
