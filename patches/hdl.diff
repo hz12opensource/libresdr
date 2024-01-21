@@ -851,3 +851,25 @@ index 000000000..63c4413a5
 +
 +// ***************************************************************************
 +// ***************************************************************************
+diff --git a/projects/scripts/project-xilinx.mk b/projects/scripts/project-xilinx.mk
+index 37081a04a..d2fad2199 100644
+--- a/projects/scripts/project-xilinx.mk
++++ b/projects/scripts/project-xilinx.mk
+@@ -19,7 +19,7 @@ ifdef CFG
+     DIR_NAME := $(basename $(notdir $(CFG)))
+ endif
+ 
+-VIVADO := vivado -mode batch -source
++VIVADO := LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 vivado -mode batch -source
+ 
+ # Parse the variables passed to make and convert them to the filename format
+ CMD_VARIABLES := $(shell echo $(-*-command-variables-*-) | tac -s ' ')
+@@ -34,7 +34,7 @@ ifneq ($(strip $(DIR_NAME)), )
+     $(shell test -d $(DIR_NAME) || mkdir $(DIR_NAME))
+     ADI_PROJECT_DIR := $(DIR_NAME)/
+     export ADI_PROJECT_DIR
+-	VIVADO := vivado -log $(DIR_NAME)/vivado.log -journal $(DIR_NAME)/vivado.jou -mode batch -source 
++	VIVADO := LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 vivado -log $(DIR_NAME)/vivado.log -journal $(DIR_NAME)/vivado.jou -mode batch -source 
+ endif
+ 
+ CLEAN_TARGET := *.cache
