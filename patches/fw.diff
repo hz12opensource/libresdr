@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 0dc9c4b..1df051c 100644
+index 0dc9c4b..e6d6127 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -3,8 +3,8 @@ VIVADO_VERSION ?= 2022.2
@@ -58,7 +58,7 @@ index 0dc9c4b..1df051c 100644
  
  clean:
  	make -C u-boot-xlnx clean
-@@ -185,6 +189,32 @@ clean:
+@@ -185,6 +189,34 @@ clean:
  	make -C hdl clean
  	rm -f $(notdir $(wildcard build/*))
  	rm -rf build/*
@@ -79,6 +79,8 @@ index 0dc9c4b..1df051c 100644
 +	cp build/zynq-$(TARGET).dtb 	$(SDIMGDIR)/devicetree.dtb
 +	cp build/uboot-env.txt  		$(SDIMGDIR)/uEnv.txt
 +	cp build/rootfs.cpio.gz  		$(SDIMGDIR)/ramdisk.image.gz
++	cp build/boot.frm  		$(SDIMGDIR)/boot.frm
++	cp build/libre.frm  		$(SDIMGDIR)/libre.frm
 +	mkimage -A arm -T ramdisk -C gzip -d $(SDIMGDIR)/ramdisk.image.gz $(SDIMGDIR)/uramdisk.image.gz
 +	touch 	$(SDIMGDIR)/boot.bif
 +	echo "img : {[bootloader] $(SDIMGDIR)/fsbl.elf  $(SDIMGDIR)/system_top.bit  $(SDIMGDIR)/u-boot.elf}" >  $(SDIMGDIR)/boot.bif
@@ -117,10 +119,10 @@ index 4cd279c..ed3f80f 100755
 +sudo dfu-util -R -d 0456:b673,0456:b674 -D ./build/libre.dfu -a firmware.dfu
 diff --git a/overclock.sh b/overclock.sh
 new file mode 100755
-index 0000000..0141b42
+index 0000000..6105140
 --- /dev/null
 +++ b/overclock.sh
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,71 @@
 +#!/bin/bash
 +
 +if [ "$#" -lt 2 ]; then
@@ -181,9 +183,14 @@ index 0000000..0141b42
 +sed -i -r 's/'"${cpu_mult_find}"'/'"${cpu_mult_replace}"'/g' "$PS7_INIT_FILE"
 +sed -i -r 's/'"${ddr_mult_find}"'/'"${ddr_mult_replace}"'/g' "$PS7_INIT_FILE"
 +
-+cd "$SDK_PATH/Release"
++pushd "$SDK_PATH/Release"
 +make clean
 +make
++
++echo 'Regenerate build/boot.bin...'
++popd
++bash -c "source ${VIVADO_SETTINGS} && bootgen -image build/boot.bif -w -o build/boot.bin"
++cat build/boot.bin build/uboot-env.bin scripts/target_mtd_info.key | tee build/boot.frm | md5sum | cut -d ' ' -f1 | tee -a build/boot.frm
 +
 +echo 'Done. Run "make sdimg" now to create overclocked firmware.'
 +
